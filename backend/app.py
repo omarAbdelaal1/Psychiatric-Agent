@@ -129,6 +129,7 @@ async def health_check():
     }
 
 
+@app.get("/info")
 @app.get("/api/info")
 async def system_info():
     return {
@@ -141,6 +142,7 @@ async def system_info():
     }
 
 
+@app.get("/live-config")
 @app.get("/api/live-config")
 async def get_live_config(patient_id: str = "default_user"):
     """
@@ -198,6 +200,7 @@ async def get_live_config(patient_id: str = "default_user"):
     }
 
 
+@app.post("/session/{session_id}/record-turn")
 @app.post("/api/session/{session_id}/record-turn")
 async def record_session_turn(session_id: str, payload: RecordTurnRequest):
     if payload.user_text:
@@ -207,6 +210,7 @@ async def record_session_turn(session_id: str, payload: RecordTurnRequest):
     return {"status": "recorded", "session_id": session_id}
 
 
+@app.get("/protocols")
 @app.get("/api/protocols")
 async def list_protocols(category: Optional[str] = None):
     return {
@@ -215,6 +219,7 @@ async def list_protocols(category: Optional[str] = None):
     }
 
 
+@app.get("/crisis")
 @app.get("/api/crisis")
 async def list_crisis_directory():
     return {
@@ -223,6 +228,7 @@ async def list_crisis_directory():
     }
 
 
+@app.get("/patient/{patient_id}")
 @app.get("/api/patient/{patient_id}")
 async def get_patient_profile(patient_id: str):
     has_consent = await memory_service.check_consent(patient_id)

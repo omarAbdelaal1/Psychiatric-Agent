@@ -137,7 +137,11 @@ class FadfadaClient {
       this.setStatus('جارٍ إعداد جلسة الفضفضة..');
       console.log('[Fadfada] Fetching live config from serverless backend (/api/live-config)...');
 
-      const res = await fetch(`/api/live-config?patient_id=${encodeURIComponent(this.patientId)}`);
+      let res = await fetch(`/api/live-config?patient_id=${encodeURIComponent(this.patientId)}`);
+      if (!res.ok) {
+        console.warn(`[Fadfada] /api/live-config returned ${res.status}, attempting /live-config fallback...`);
+        res = await fetch(`/live-config?patient_id=${encodeURIComponent(this.patientId)}`);
+      }
       if (!res.ok) {
         throw new Error(`Failed to load session config: HTTP ${res.status}`);
       }
@@ -147,16 +151,19 @@ class FadfadaClient {
 
       if (!config.has_api_key || !config.ws_url) {
         console.error('[Fadfada] No GEMINI_API_KEY available from server environment.');
-        this.setStatus('⚠️ مفتاح GEMINI_API_KEY غير موجود في إعدادات البيئة (Vercel Variables)');
+        this.setStatus('⚠️ مفتاح GEMINI_API_KEY غير موجود في Vercel');
         this.addMessage(
-          '⚠️ لم يتم العثور على مفتاح GEMINI_API_KEY في إعدادات الخادم (Environment Variables). يرجى إضافة المفتاح في لوحة تحكم Vercel وإعادة تشغيل النشر.',
+          '⚠️ لم يتم العثور على مفتاح GEMINI_API_KEY في إعدادات الخادم.\n\nتأكد من:\n1. إضافة GEMINI_API_KEY في Vercel Project Settings > Environment Variables.\n2. تحديد بيئة Production.\n3. الضغط على Redeploy للمشروع بعد حفظ المتغيرات.',
           'agent'
         );
         this.isConnecting = false;
         return;
       }
 
-      console.log('[Fadfada] Connecting directly to Gemini Live with model:', config.model);
+      const rawModel = (config.model || 'gemini-3.8-live').trim();
+      const cleanModel = rawModel.startsWith('models/') ? rawModel : `models/${rawModel}`;
+      console.log('[Fadfada] Connecting directly to Gemini Live with model:', cleanModel, 'Voice:', config.voice || 'Aoede');
+
       this.geminiSocket = new WebSocket(config.ws_url);
       this.isDirectGemini = true;
 
@@ -164,7 +171,7 @@ class FadfadaClient {
         console.log('[Fadfada] Direct Gemini Live WebSocket connected. Dispatching setup frame...');
         const setupMessage = {
           setup: {
-            model: `models/${config.model || 'gemini-3.8-live'}`,
+            model: cleanModel,
             generationConfig: {
               responseModalities: ['AUDIO'],
               speechConfig: {

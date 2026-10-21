@@ -16,7 +16,35 @@
       "dest": "/frontend/$1"
     },
     {
-      "src": "/health",
+      "src": "/(css|js)/(.*)",
+      "dest": "/frontend/$1/$2"
+    },
+    {
+      "src": "/(health|api/health)",
+      "dest": "/api/index.py"
+    },
+    {
+      "src": "/(api/live-config|live-config)",
+      "dest": "/api/index.py"
+    },
+    {
+      "src": "/(api/protocols|protocols)",
+      "dest": "/api/index.py"
+    },
+    {
+      "src": "/(api/crisis|crisis)",
+      "dest": "/api/index.py"
+    },
+    {
+      "src": "/(api/info|info)",
+      "dest": "/api/index.py"
+    },
+    {
+      "src": "/(api/patient/.*|patient/.*)",
+      "dest": "/api/index.py"
+    },
+    {
+      "src": "/(api/session/.*|session/.*)",
       "dest": "/api/index.py"
     },
     {
