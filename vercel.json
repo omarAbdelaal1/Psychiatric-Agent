@@ -8,20 +8,12 @@
     {
       "src": "frontend/**",
       "use": "@vercel/static"
-    },
-    {
-      "src": "design-variants/**",
-      "use": "@vercel/static"
     }
   ],
   "routes": [
     {
       "src": "/static/(.*)",
       "dest": "/frontend/$1"
-    },
-    {
-      "src": "/design-variants-static/(.*)",
-      "dest": "/design-variants/$1"
     },
     {
       "src": "/health",
