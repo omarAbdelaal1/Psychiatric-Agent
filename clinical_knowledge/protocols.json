@@ -1,0 +1,88 @@
+[
+  {
+    "id": "grounding_54321",
+    "title_ar": "تمرين التثبيت الحسي 5-4-3-2-1",
+    "category": "grounding",
+    "indications": [
+      "acute_anxiety",
+      "panic_feelings",
+      "feeling_overwhelmed",
+      "dissociation_or_spacing_out"
+    ],
+    "contraindications": [
+      "active_suicidal_crisis",
+      "severe_psychosis"
+    ],
+    "evidence_base": "Dialectical Behavior Therapy (DBT) Distress Tolerance",
+    "steps_ar": [
+      "5 حاجات تقدر تشوفها بعينك دلوقتي في المكان اللي أنت فيه.",
+      "4 حاجات حواليك تلمسهم وتحس بملمسهم بهدوء.",
+      "3 أصوات تقدر تميزهم وتسمعهم في الخلفية.",
+      "حاجتين تقدر تشم ريحتهم حواليك.",
+      "طعم حاجة في لسانك أو رشفة ماية ساقعة."
+    ]
+  },
+  {
+    "id": "box_breathing",
+    "title_ar": "تمرين التنفس المربع 4-4-4-4",
+    "category": "breathwork",
+    "indications": [
+      "bodily_tension",
+      "chest_tightness_emotional",
+      "hyperventilation_rumination"
+    ],
+    "contraindications": [
+      "acute_medical_respiratory_emergency",
+      "asthma_attack"
+    ],
+    "evidence_base": "Parasympathetic nervous system activation via paced respiration",
+    "steps_ar": [
+      "خد شهيق هادي وبطيء من الأنف في 4 ثواني.",
+      "اكتم النفس براحة تامة وبدون شد عصبي لمدة 4 ثواني.",
+      "خرج الزفير ببطء شديد من الفم في 4 ثواني.",
+      "استنى 4 ثواني بهدوء قبل النفس اللي بعده."
+    ]
+  },
+  {
+    "id": "cbt_thought_reframing",
+    "title_ar": "فحص الأفكار والتوسيع المعرفي (CBT)",
+    "category": "cbt",
+    "indications": [
+      "catastrophizing",
+      "all_or_nothing_thinking",
+      "excessive_self_blame"
+    ],
+    "contraindications": [
+      "acute_grief_immediate_bereavement",
+      "active_crisis"
+    ],
+    "evidence_base": "Beck Cognitive Behavioral Therapy (CBT)",
+    "steps_ar": [
+      "حدد وسمي الفكرة اللي بتضايقك أو بتوترك بدقة.",
+      "اسأل نفسك: إيه الدليل الحقيقي الملموس اللي بيأكد الفكرة دي دلوقتي؟",
+      "إيه الاحتمالات التانية البديلة اللي ممكن تكون غايبة عن بالي؟",
+      "لو صديق بيعز عليك في نفس الموقف ده، كنت هتقوله إيه؟",
+      "صيغ فكرة جديدة أكثر توازناً وواقعية ترتاح معاها."
+    ]
+  },
+  {
+    "id": "behavioral_activation_micro",
+    "title_ar": "التنشيط السلوكي المصغر (خطوة الـ 5 دقائق)",
+    "category": "behavioral_activation",
+    "indications": [
+      "apathy_inertia",
+      "low_energy_depression",
+      "task_paralysis"
+    ],
+    "contraindications": [
+      "severe_exhaustion",
+      "medical_fatigue"
+    ],
+    "evidence_base": "Behavioral Activation for Depression (Martell et al.)",
+    "steps_ar": [
+      "اختار خطوة صغيرة جداً تقدر تعملها في دقيقتين لـ 5 دقائق بس (زي شرب كوباية ماية أو ترتيب السرير).",
+      "قلل المتطلبات للحد الأدنى وماتستناش الشغف أو الحماس ييجوا الأول.",
+      "لاحظ شعورك البسيط بعد ما خلصت واحتفي بأي إنجاز مهما كان صغير."
+    ]
+  }
+]

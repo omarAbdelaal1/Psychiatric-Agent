@@ -1,0 +1,111 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CandidateMemoryProposal",
+  "description": "Structured candidate memory extracted from psychiatric session conforming to Section 13.1",
+  "type": "object",
+  "properties": {
+    "patient_id": {
+      "type": "string"
+    },
+    "session_id": {
+      "type": "string"
+    },
+    "proposals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "memory_type": {
+            "type": "string",
+            "enum": [
+              "coping_preference",
+              "communication_preference",
+              "patient_goal",
+              "personal_history",
+              "symptom_report",
+              "treatment_report",
+              "support_system",
+              "boundary"
+            ]
+          },
+          "content": {
+            "type": "string"
+          },
+          "source_type": {
+            "type": "string",
+            "enum": [
+              "patient_reported",
+              "clinician_supplied",
+              "session_observation"
+            ]
+          },
+          "source_event_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "supporting_evidence": {
+            "type": "string"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 1.0
+          },
+          "sensitivity": {
+            "type": "string",
+            "enum": [
+              "standard",
+              "review_required",
+              "strictly_confidential"
+            ]
+          },
+          "time_sensitive": {
+            "type": "boolean"
+          },
+          "proposed_action": {
+            "type": "string",
+            "enum": [
+              "ADD",
+              "UPDATE",
+              "NO_ACTION",
+              "REJECT",
+              "ERASE"
+            ]
+          },
+          "requires_patient_confirmation": {
+            "type": "boolean"
+          },
+          "reason_for_retention": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "memory_type",
+          "content",
+          "source_type",
+          "confidence",
+          "proposed_action"
+        ]
+      }
+    },
+    "excluded_items": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "clarifications_needed": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "patient_id",
+    "session_id",
+    "proposals"
+  ]
+}

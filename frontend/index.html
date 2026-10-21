@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>فضفضة (Fadfada) — رفيق الاستماع والدعم النفسي بالعامية المصرية</title>
+  <!-- Cairo Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <!-- Persistent Emergency Top Banner -->
+  <aside class="crisis-bar" role="alert" aria-label="أرقام الطوارئ المصرية">
+    <div class="crisis-content">
+      <span class="crisis-icon">🚨</span>
+      <span class="crisis-text">
+        <strong>حالات الطوارئ والأزمات النفسية العاجلة:</strong> الخط الساخن للأمانة العامة للصحة النفسية:
+        <a href="tel:16328" class="hotline-link">16328</a> (24/7 مجاناً) | الإسعاف: <a href="tel:123" class="hotline-link">123</a>
+      </span>
+      <button class="crisis-more-btn" onclick="openCrisisModal()" aria-label="عرض كل خطوط الطوارئ">عرض كل الأرقام</button>
+    </div>
+  </aside>
+
+  <!-- Application Shell -->
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="brand">
+        <h1 class="logo-title">فضفضة <span>(Fadfada)</span></h1>
+        <p class="tagline">مساحة استماع آمنة وداعمة بالعامية المصرية</p>
+      </div>
+
+      <div class="header-actions">
+        <button class="nav-pill-btn" onclick="openProtocolsDrawer()">
+          🌿 تمارين التنفس والدعم
+        </button>
+        <button class="nav-pill-btn" onclick="openPrivacyModal()">
+          🔒 الخصوصية والموافقة (Law 151)
+        </button>
+        <a href="/design-variants-static/index.html" target="_blank" class="nav-pill-btn variants-link">
+          🎨 بدائل التصميم (4 Variants)
+        </a>
+      </div>
+    </header>
+
+    <!-- Main Sanctuary Stage -->
+    <main class="sanctuary-stage">
+      <!-- Voice Visualizer Stage -->
+      <section class="visualizer-wrapper" aria-label="هالة الصوت التفاعلية">
+        <div class="canvas-container">
+          <canvas id="voiceOrbCanvas" width="280" height="280" aria-hidden="true"></canvas>
+          <div class="orb-status-indicator" id="orbStatusText">مستعد للحديث</div>
+        </div>
+      </section>
+
+      <!-- Structured Conversation Message Stream -->
+      <section class="dialogue-container" aria-live="polite">
+        <div class="conversation-feed" id="conversationFeed">
+          <!-- Initial Welcome Message from Fadfada -->
+          <div class="chat-message message-agent">
+            <div class="message-meta">
+              <span class="sender-tag">فضفضة 🌿</span>
+              <span class="time-tag">الآن</span>
+            </div>
+            <div class="message-bubble">
+              أهلاً بيك في مساحتك الآمنة مع فضفضة.. أنا هنا وسامعاك بكل اهتمام وهدوء. لما تحب تتكلم، اضغط على "ابدأ الفضفضة" وخد وقتك تماماً في الكلام.
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Streaming Interim Indicator -->
+        <div class="streaming-interim-card" id="streamingInterimCard" style="display: none;">
+          <div class="streaming-meta">
+            <span class="pulsing-voice-dot"></span>
+            <span id="streamingSpeakerTag">فضفضة يتحدث الآن...</span>
+          </div>
+          <div class="streaming-text" id="streamingInterimText">...</div>
+        </div>
+      </section>
+
+      <!-- Primary Audio & Interaction Controls -->
+      <section class="controls-container" aria-label="أدوات التحكم الصوتي">
+        <div class="primary-controls">
+          <button id="btnStartVoice" class="control-btn btn-record" onclick="toggleVoiceSession()">
+            <span class="btn-icon">🎙️</span>
+            <span class="btn-label" id="btnRecordLabel">ابدأ الفضفضة</span>
+          </button>
+        </div>
+
+        <!-- Typed Fallback Input Bar -->
+        <div class="fallback-input-container">
+          <input type="text" id="typedInput" class="typed-input" placeholder="أو اكتب فضفضتك هنا واضغط إرسال.." onkeydown="handleInputKey(event)">
+          <button id="btnSendText" class="btn-send-text" onclick="sendTypedTurn()">إرسال</button>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer Disclaimers -->
+    <footer class="app-footer">
+      <p>
+        فضفضة رفيق ذكاء اصطناعي للمساندة العاطفية وليس بديلاً عن الطبيب النفسي البشري أو التشخيص السريري.
+        جميع البيانات محفوظة وفقاً للقانون المصري رقم 151 لسنة 2020 لحماية البيانات الشخصية.
+      </p>
+    </footer>
+  </div>
+
+  <!-- Coping Protocols Drawer -->
+  <div class="drawer-overlay" id="protocolsDrawer" onclick="closeProtocolsDrawer(event)">
+    <div class="drawer-panel" onclick="event.stopPropagation()">
+      <div class="drawer-header">
+        <h3>تمارين الدعم الإكلينيكي المعتمدة</h3>
+        <button class="close-btn" onclick="closeProtocolsDrawer()">✕</button>
+      </div>
+      <div class="drawer-body" id="protocolsList">
+        <!-- Rendered dynamically from /api/protocols -->
+        <div class="loading-spinner">جارٍ تحميل التمارين..</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Law 151/2020 Privacy & Consent Modal -->
+  <div class="modal-overlay" id="privacyModal" onclick="closePrivacyModal(event)">
+    <div class="modal-card" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h3>حوكمة الذاكرة والخصوصية (القانون المصري 151/2020)</h3>
+        <button class="close-btn" onclick="closePrivacyModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="consent-box">
+          <div class="consent-info">
+            <strong>الموافقة على حفظ الذاكرة الطولية (Long-term Memory)</strong>
+            <p>تسمح لفضفضة بتذكر تفضيلاتك وأهدافك الشخصية لدعمك في الجلسات القادمة دون حفظ أي تشخيصات طبية.</p>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="consentToggle" onchange="toggleConsent(this.checked)">
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="active-memories-section">
+          <h4>الذكريات المحفوظة حالياً لحسابك:</h4>
+          <div id="patientMemoriesList" class="memories-list">
+            <p class="empty-state">لا توجد ذكريات محفوظة حالياً.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Emergency Hotlines Directory Modal -->
+  <div class="modal-overlay" id="crisisModal" onclick="closeCrisisModal(event)">
+    <div class="modal-card emergency-card" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h3>🚨 أرقام الطوارئ والدعم النفسي في مصر</h3>
+        <button class="close-btn" onclick="closeCrisisModal()">✕</button>
+      </div>
+      <div class="modal-body" id="crisisList">
+        <!-- Rendered dynamically from /api/crisis -->
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/js/audio-streamer.js"></script>
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

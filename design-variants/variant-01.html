@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>فضفضة — الملاذ الهادئ (Variant 1: Serene Minimalist Sanctuary)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-gradient: radial-gradient(circle at 50% 20%, #0d2826 0%, #061514 100%);
+      --emerald-accent: #10b981;
+      --emerald-glow: rgba(16, 185, 129, 0.25);
+      --text-main: #f0fdf4;
+      --text-muted: #94a3b8;
+      --card-bg: rgba(13, 40, 38, 0.65);
+      --card-border: rgba(16, 185, 129, 0.2);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Cairo', sans-serif;
+      background: var(--bg-gradient);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.5rem;
+    }
+    header {
+      text-align: center;
+      margin-top: 1rem;
+    }
+    header h1 {
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: #34d399;
+      letter-spacing: -0.5px;
+    }
+    header p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      margin-top: 0.25rem;
+    }
+    .crisis-pill {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.35);
+      color: #fca5a5;
+      padding: 0.4rem 1.2rem;
+      border-radius: 9999px;
+      font-size: 0.85rem;
+      margin-top: 0.75rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      text-decoration: none;
+    }
+    .sanctuary-center {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin: 2rem 0;
+      width: 100%;
+      max-width: 550px;
+    }
+    .orb-container {
+      position: relative;
+      width: 200px;
+      height: 200px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 2rem;
+    }
+    .orb {
+      width: 130px;
+      height: 130px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #34d399 0%, #059669 50%, #022c22 100%);
+      box-shadow: 0 0 50px var(--emerald-glow), inset 0 0 25px rgba(255,255,255,0.4);
+      animation: breathe 5s ease-in-out infinite;
+    }
+    .pulse-ring {
+      position: absolute;
+      width: 180px;
+      height: 180px;
+      border-radius: 50%;
+      border: 1px solid rgba(52, 211, 153, 0.3);
+      animation: ripple 3s linear infinite;
+    }
+    @keyframes breathe {
+      0%, 100% { transform: scale(1); filter: brightness(1); }
+      50% { transform: scale(1.12); filter: brightness(1.25); box-shadow: 0 0 75px rgba(52, 211, 153, 0.45); }
+    }
+    @keyframes ripple {
+      0% { transform: scale(0.8); opacity: 0.8; }
+      100% { transform: scale(1.3); opacity: 0; }
+    }
+    .dialogue-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      backdrop-filter: blur(12px);
+      border-radius: 20px;
+      padding: 1.5rem 1.8rem;
+      text-align: center;
+      width: 100%;
+      min-height: 110px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+    .dialogue-text {
+      font-size: 1.15rem;
+      line-height: 1.7;
+      color: #e2e8f0;
+    }
+    .controls {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+    .btn {
+      padding: 0.8rem 1.8rem;
+      border-radius: 9999px;
+      font-family: inherit;
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .btn-primary {
+      background: #10b981;
+      color: #022c22;
+      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.35);
+    }
+    .btn-primary:hover {
+      background: #34d399;
+      transform: translateY(-2px);
+    }
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.08);
+      color: #f1f5f9;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.15);
+    }
+    footer {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-align: center;
+      max-width: 600px;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>فضفضة</h1>
+    <p>ملاذك الآمن للاستماع والتفريغ العاطفي بالعامية المصرية</p>
+    <div>
+      <a href="tel:16328" class="crisis-pill">
+        <span>خط الطوارئ النفسي المجاني: 16328</span>
+      </a>
+    </div>
+  </header>
+
+  <main class="sanctuary-center">
+    <div class="orb-container">
+      <div class="pulse-ring"></div>
+      <div class="orb"></div>
+    </div>
+
+    <div class="dialogue-card">
+      <p class="dialogue-text">
+        "أهلاً بيك.. أنا هنا وسامعك بكل اهتمام وهدوء. خد نفس عميق وشاركني اللي حاسس بيه دلوقتي، مفيش أي استعجال."
+      </p>
+    </div>
+
+    <div class="controls">
+      <button class="btn btn-primary" onclick="alert('جارٍ بدء الاستماع المباشر..')">🎙️ ابدأ الفضفضة</button>
+    </div>
+  </main>
+
+  <footer>
+    فضفضة هو رفيق ذكاء اصطناعي داعم وليس طبيباً بشرياً. بياناتك محمية وفقاً للقانون المصري رقم 151 لسنة 2020.
+  </footer>
+</body>
+</html>

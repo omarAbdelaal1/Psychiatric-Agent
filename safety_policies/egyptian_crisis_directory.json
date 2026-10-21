@@ -1,0 +1,62 @@
+[
+  {
+    "id": "eg_mental_health_national",
+    "organization": "الأمانة العامة للصحة النفسية وعلاج الإدمان (وزارة الصحة)",
+    "phone_number": "16328",
+    "display_number": "16328",
+    "availability": "24/7 مجاناً",
+    "jurisdiction": "جمهورية مصر العربية (جميع المحافظات)",
+    "description": "خدمة استشارات ودعم نفسي مجانية وسرية بإشراف أطباء وأخصائيين نفسيين معتمدين من وزارة الصحة.",
+    "is_primary": true
+  },
+  {
+    "id": "eg_ambulance",
+    "organization": "هيئة الإسعاف المصرية",
+    "phone_number": "123",
+    "display_number": "123",
+    "availability": "24/7",
+    "jurisdiction": "جمهورية مصر العربية",
+    "description": "حالات الطوارئ الطبية العاجلة والإنقاذ والحوادث والتسمم الحاد والإصابات الجسدية.",
+    "is_primary": true
+  },
+  {
+    "id": "eg_mental_health_landline",
+    "organization": "الخط الساخن للاستشارات النفسية (المجلس القومي للصحة النفسية)",
+    "phone_number": "08008880700",
+    "display_number": "08008880700",
+    "availability": "متاح يومياً (من أي خط أرضي مجاناً)",
+    "jurisdiction": "مصر (خطوط أرضية)",
+    "description": "المجلس القومي للصحة النفسية للاستشارات النفسية المجانية من أي هاتف أرضي.",
+    "is_primary": false
+  },
+  {
+    "id": "eg_abbasiya_emergency",
+    "organization": "طوارئ مستشفى العباسية للصحة النفسية",
+    "phone_number": "0220816831",
+    "display_number": "02-20816831",
+    "availability": "24/7",
+    "jurisdiction": "القاهرة الكبرى",
+    "description": "استقبال وتقييم الحالات النفسية الطارئة والتدخل في الأزمات على مدار 24 ساعة بمحافظة القاهرة.",
+    "is_primary": false
+  },
+  {
+    "id": "eg_child_helpline",
+    "organization": "خط نجدة الطفل (المجلس القومي للطفولة والأمومة)",
+    "phone_number": "16000",
+    "display_number": "16000",
+    "availability": "24/7 مجاناً",
+    "jurisdiction": "جمهورية مصر العربية",
+    "description": "حماية الأطفال واليافعين من الإيذاء والضغط النفسي وتقديم المشورة النفسية والأسرية المتخصصة.",
+    "is_primary": false
+  },
+  {
+    "id": "eg_women_complaints",
+    "organization": "مكتب شكاوى المرأة (المجلس القومي للمرأة)",
+    "phone_number": "15115",
+    "display_number": "15115",
+    "availability": "24/7",
+    "jurisdiction": "جمهورية مصر العربية",
+    "description": "استشارات نفسية واجتماعية وقانونية متخصصة ومساندة للسيدات والفتيات اللاتي يواجهن عنفاً أو أزمات أسرية.",
+    "is_primary": false
+  }
+]

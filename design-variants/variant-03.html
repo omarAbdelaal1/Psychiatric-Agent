@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>فضفضة — هالة الصوت التفاعلية (Variant 3: Audio-First Immersive Orb)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Cairo', sans-serif;
+      background: #030712;
+      color: #f9fafb;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      padding: 2rem;
+      overflow: hidden;
+    }
+    .top-bar {
+      width: 100%;
+      max-width: 800px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 10;
+    }
+    .title-group h2 {
+      font-size: 1.8rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #a7f3d0, #10b981);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .title-group p {
+      font-size: 0.85rem;
+      color: #94a3b8;
+    }
+    .emergency-btn {
+      background: rgba(220, 38, 38, 0.2);
+      border: 1px solid rgba(239, 68, 68, 0.5);
+      color: #fca5a5;
+      padding: 0.4rem 1rem;
+      border-radius: 9999px;
+      font-size: 0.85rem;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .orb-stage {
+      position: relative;
+      width: 320px;
+      height: 320px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .canvas-orb {
+      width: 220px;
+      height: 220px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 40% 40%, #6ee7b7 0%, #10b981 40%, #047857 75%, #022c22 100%);
+      box-shadow: 0 0 80px rgba(16, 185, 129, 0.55), inset 0 0 35px rgba(255, 255, 255, 0.6);
+      animation: sound-react 2.5s ease-in-out infinite alternate;
+    }
+    .audio-waves {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      border: 2px solid rgba(110, 231, 183, 0.25);
+      animation: expand-wave 3s infinite;
+    }
+    .audio-waves:nth-child(2) {
+      animation-delay: 1.5s;
+    }
+    @keyframes sound-react {
+      0% { transform: scale(0.96); filter: hue-rotate(0deg); }
+      100% { transform: scale(1.08); filter: hue-rotate(25deg); box-shadow: 0 0 120px rgba(52, 211, 153, 0.7); }
+    }
+    @keyframes expand-wave {
+      0% { transform: scale(0.85); opacity: 0.9; }
+      100% { transform: scale(1.5); opacity: 0; }
+    }
+    .transcription-pill {
+      background: rgba(17, 24, 39, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(16px);
+      padding: 1.2rem 2rem;
+      border-radius: 30px;
+      max-width: 650px;
+      text-align: center;
+      font-size: 1.15rem;
+      line-height: 1.7;
+      color: #f1f5f9;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+      z-index: 10;
+    }
+    .voice-actions {
+      display: flex;
+      gap: 1.5rem;
+      align-items: center;
+      z-index: 10;
+    }
+    .mic-circle {
+      width: 76px;
+      height: 76px;
+      border-radius: 50%;
+      background: #10b981;
+      border: none;
+      color: #064e3b;
+      font-size: 1.8rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 30px rgba(16, 185, 129, 0.6);
+      transition: all 0.2s;
+    }
+    .mic-circle:hover {
+      transform: scale(1.08);
+      background: #34d399;
+    }
+    .aux-btn {
+      background: #1f2937;
+      border: 1px solid #374151;
+      color: #e5e7eb;
+      padding: 0.75rem 1.4rem;
+      border-radius: 9999px;
+      font-family: inherit;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .aux-btn:hover {
+      background: #374151;
+    }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <div class="title-group">
+      <h2>فضفضة Live</h2>
+      <p>صوت ثنائي الاتجاه بالعامية المصرية (صوت Aoede)</p>
+    </div>
+    <a href="tel:16328" class="emergency-btn">خط النجدة النفسي: 16328</a>
+  </div>
+
+  <div class="orb-stage">
+    <div class="audio-waves"></div>
+    <div class="audio-waves"></div>
+    <div class="canvas-orb"></div>
+  </div>
+
+  <div class="transcription-pill">
+    "أنا سامعك وفاهمك.. لما تحس إن الأفكار كلها بتجري ورا بعض ومفيش مخرج، وقف دقيقة وقولي إيه أكتر فكرة معطلاك دلوقتي؟"
+  </div>
+
+  <div class="voice-actions">
+    <button class="mic-circle" onclick="alert('بدء التحدث المباشر')">🎙️</button>
+  </div>
+</body>
+</html>

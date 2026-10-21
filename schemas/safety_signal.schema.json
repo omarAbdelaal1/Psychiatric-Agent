@@ -1,0 +1,82 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SafetySignalAnalysis",
+  "description": "Structured clinical safety signal evaluation conforming to Section 13.2",
+  "type": "object",
+  "properties": {
+    "signal_categories": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "none",
+          "ambiguous",
+          "suicide_risk",
+          "self_harm_concern",
+          "severe_violence",
+          "acute_distress",
+          "overdose_medical_emergency",
+          "coercion_unsafe_environment"
+        ]
+      }
+    },
+    "supporting_evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "event_id": {
+            "type": "string"
+          },
+          "evidence_type": {
+            "type": "string",
+            "enum": [
+              "direct_patient_statement",
+              "inferred_pattern",
+              "third_party_reference"
+            ]
+          },
+          "quote_or_description": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "evidence_type",
+          "quote_or_description"
+        ]
+      }
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0.0,
+      "maximum": 1.0
+    },
+    "recommended_action": {
+      "type": "string",
+      "enum": [
+        "continue_support",
+        "explore_safety_softly",
+        "provide_hotline_resources",
+        "escalate_immediate_crisis"
+      ]
+    },
+    "emergency_action": {
+      "type": "boolean"
+    },
+    "suggested_hotlines": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "reasoning_ar": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "signal_categories",
+    "confidence",
+    "recommended_action",
+    "emergency_action"
+  ]
+}

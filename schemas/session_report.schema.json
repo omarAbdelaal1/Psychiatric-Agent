@@ -1,0 +1,118 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "DetailedSessionReport",
+  "description": "Detailed clinical longitudinal support report conforming to Section 13.3",
+  "type": "object",
+  "properties": {
+    "session_id": {
+      "type": "string"
+    },
+    "patient_id": {
+      "type": "string"
+    },
+    "session_metadata": {
+      "type": "object",
+      "properties": {
+        "timestamp": {
+          "type": "string"
+        },
+        "duration_seconds": {
+          "type": "number"
+        },
+        "turn_count": {
+          "type": "integer"
+        }
+      }
+    },
+    "primary_concerns": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "topic": {
+            "type": "string"
+          },
+          "severity_patient_reported": {
+            "type": "string"
+          },
+          "evidence": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "topic",
+          "evidence"
+        ]
+      }
+    },
+    "emotional_state_observed": {
+      "type": "object",
+      "properties": {
+        "patient_described": {
+          "type": "string"
+        },
+        "tentative_reflection": {
+          "type": "string"
+        }
+      }
+    },
+    "interventions_used": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "protocol_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "patient_response": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "patient_response"
+        ]
+      }
+    },
+    "patient_strengths_and_resources": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "collaborative_next_steps": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "safety_assessment_summary": {
+      "type": "object",
+      "properties": {
+        "risk_detected": {
+          "type": "boolean"
+        },
+        "details": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "risk_detected"
+      ]
+    },
+    "patient_friendly_summary_ar": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "session_id",
+    "patient_id",
+    "primary_concerns",
+    "interventions_used",
+    "safety_assessment_summary",
+    "patient_friendly_summary_ar"
+  ]
+}

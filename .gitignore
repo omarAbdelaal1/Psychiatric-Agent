@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+
+# Environment & Secrets
+.env
+.env.local
+.env.*.local
+
+# Databases & local storage
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+
+# Testing & Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Vercel
+.vercel/
+
+# Operating System
+.DS_Store
+Thumbs.db

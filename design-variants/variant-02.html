@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>فضفضة — العيادة المساندة (Variant 2: Therapeutic Split-View)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #090d16;
+      --panel: #111827;
+      --card-bg: #1f2937;
+      --primary: #06b6d4;
+      --primary-light: #67e8f9;
+      --text: #f9fafb;
+      --text-muted: #9ca3af;
+      --border: #374151;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Cairo', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    nav {
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+      padding: 0.8rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .logo { font-size: 1.4rem; font-weight: 700; color: var(--primary-light); }
+    .emergency-badge {
+      background: #7f1d1d;
+      color: #fecaca;
+      border: 1px solid #dc2626;
+      padding: 0.35rem 0.9rem;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-decoration: none;
+    }
+    .main-grid {
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      gap: 1.5rem;
+      padding: 1.5rem 2rem;
+      flex: 1;
+    }
+    .protocols-panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      overflow-y: auto;
+    }
+    .panel-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--primary-light);
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0.5rem;
+    }
+    .protocol-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .protocol-card:hover {
+      border-color: var(--primary);
+      transform: translateY(-2px);
+    }
+    .protocol-card h4 {
+      font-size: 0.95rem;
+      color: #e5e7eb;
+      margin-bottom: 0.3rem;
+    }
+    .protocol-card p {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+    .badge {
+      display: inline-block;
+      font-size: 0.7rem;
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+      background: #0e7490;
+      color: #cffafe;
+      margin-top: 0.4rem;
+    }
+    .chat-panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .chat-header {
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .mini-orb {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: radial-gradient(circle, var(--primary-light) 0%, var(--primary) 100%);
+      box-shadow: 0 0 15px rgba(6, 182, 212, 0.4);
+      animation: pulse 3s infinite;
+    }
+    @keyframes pulse { 0%,100%{transform:scale(1);} 50%{transform:scale(1.08);} }
+    .chat-feed {
+      flex: 1;
+      padding: 1.5rem;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .msg {
+      max-width: 80%;
+      padding: 0.9rem 1.2rem;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+    .msg-agent {
+      background: #1e293b;
+      align-self: flex-start;
+      border-right: 3px solid var(--primary);
+    }
+    .msg-user {
+      background: #0f766e;
+      align-self: flex-end;
+      color: #f0fdfa;
+    }
+    .chat-input-bar {
+      padding: 1rem 1.5rem;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 0.8rem;
+      background: #0b1120;
+    }
+    .chat-input {
+      flex: 1;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      font-family: inherit;
+    }
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      font-family: inherit;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+    }
+    .btn-mic {
+      background: var(--primary);
+      color: #082f49;
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="logo">فضفضة — عيادة الدعم والتنفس</div>
+    <a href="tel:16328" class="emergency-badge">طوارئ الصحة النفسية 16328</a>
+  </nav>
+
+  <div class="main-grid">
+    <aside class="protocols-panel">
+      <div class="panel-title">تمارين الدعم الإكلينيكي المعتمدة</div>
+
+      <div class="protocol-card" onclick="alert('تمرين التثبيت الحسي 5-4-3-2-1')">
+        <h4>تمرين التثبيت الحسي 5-4-3-2-1</h4>
+        <p>لتخفيف نوبات الهلع والقلق الحاد وإعادة الانتباه للحاضر.</p>
+        <span class="badge">DBT Distress Tolerance</span>
+      </div>
+
+      <div class="protocol-card" onclick="alert('تمرين التنفس المربع 4-4-4-4')">
+        <h4>تمرين التنفس المربع 4-4-4-4</h4>
+        <p>لتهدئة ضربات القلب وتخفيف الشد العضلي في الصدر.</p>
+        <span class="badge">Paced Respiration</span>
+      </div>
+
+      <div class="protocol-card" onclick="alert('فحص الأفكار والتوسيع المعرفي')">
+        <h4>فحص الأفكار المعرفي (CBT)</h4>
+        <p>مواجهة التهويل والتفكير الكارثي واللوم الزائد للنفس.</p>
+        <span class="badge">Beck CBT</span>
+      </div>
+
+      <div class="protocol-card" onclick="alert('التنشيط السلوكي المصغر')">
+        <h4>التنشيط السلوكي المصغر</h4>
+        <p>كسر حلقة الفتور والتسويف بخطوة لا تزيد عن 5 دقائق.</p>
+        <span class="badge">Behavioral Activation</span>
+      </div>
+    </aside>
+
+    <main class="chat-panel">
+      <div class="chat-header">
+        <div class="mini-orb"></div>
+        <div>
+          <h3>المحادثة الصوتية المباشرة (صوت Aoede)</h3>
+          <p style="font-size:0.8rem; color:var(--text-muted)">اتصال صوتي ثنائي الاتجاه 16kHz/24kHz</p>
+        </div>
+      </div>
+
+      <div class="chat-feed">
+        <div class="msg msg-agent">
+          أهلاً بيك يا فندم. أنا هنا ومتابع معاك بكل تفهم.. إيه اللي مضايقك النهارده؟
+        </div>
+        <div class="msg msg-user">
+          حاسس بضغط شغل رهيب، والمدير باعت إيميل وترني جداً وحاسس بنهجان في صدري.
+        </div>
+        <div class="msg msg-agent">
+          سلامتك ألف سلامة.. مفهوم تماماً إن الإيميلات المفاجئة دي تعمل خضة في الجسم. شرايين الصدر بتشد مع المفاجأة. تحب نضغط على تمرين التنفس المربع اللي على اليمين وناخد 4 عدات شهيق هادي سوا؟
+        </div>
+      </div>
+
+      <div class="chat-input-bar">
+        <input type="text" class="chat-input" placeholder="اكتب فضفضتك هنا أو استخدم الميكروفون..">
+        <button class="btn btn-mic">🎙️ تحدث</button>
+      </div>
+    </main>
+  </div>
+</body>
+</html>
