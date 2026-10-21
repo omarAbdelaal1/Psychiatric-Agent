@@ -22,33 +22,15 @@ class SimpleStorage:
         else:
             self.db_path = Path(db_path)
 
-        # Ensure parent directory exists (especially for /tmp on serverless)
-        try:
-            self.db_path.parent.mkdir(parents=True, exist_ok=True)
-        except Exception:
-            pass
-
         self._lock = asyncio.Lock()
         self._init_db()
 
     def _get_connection(self) -> sqlite3.Connection:
         conn = sqlite3.connect(str(self.db_path), check_same_thread=False)
         conn.row_factory = sqlite3.Row
-        try:
-            conn.execute("PRAGMA journal_mode = WAL;")
-        except Exception:
-            try:
-                conn.execute("PRAGMA journal_mode = DELETE;")
-            except Exception:
-                pass
-        try:
-            conn.execute("PRAGMA synchronous = NORMAL;")
-        except Exception:
-            pass
-        try:
-            conn.execute("PRAGMA foreign_keys = ON;")
-        except Exception:
-            pass
+        conn.execute("PRAGMA journal_mode = WAL;")
+        conn.execute("PRAGMA synchronous = NORMAL;")
+        conn.execute("PRAGMA foreign_keys = ON;")
         return conn
 
     def _init_db(self) -> None:

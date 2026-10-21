@@ -6,7 +6,6 @@ Implements AppSec middleware, REST APIs, and full-duplex WebSocket gateway.
 import asyncio
 import json
 import logging
-import os
 from pathlib import Path
 from typing import Any, Dict, Optional
 
@@ -92,12 +91,6 @@ class NormalizeTranscriptRequest(BaseModel):
     text: str
 
 
-class RecordTurnRequest(BaseModel):
-    patient_id: str = "default_user"
-    user_text: Optional[str] = ""
-    agent_text: Optional[str] = ""
-
-
 # ============================================================================
 # REST Endpoints
 # ============================================================================
@@ -129,7 +122,6 @@ async def health_check():
     }
 
 
-@app.get("/info")
 @app.get("/api/info")
 async def system_info():
     return {
@@ -142,75 +134,6 @@ async def system_info():
     }
 
 
-@app.get("/live-config")
-@app.get("/api/live-config")
-async def get_live_config(patient_id: str = "default_user"):
-    """
-    Returns real-time session configuration for client-side direct Gemini Live
-    streaming when running on serverless environments (e.g. Vercel) where incoming
-    WebSockets are unsupported.
-    """
-    api_key = config.GEMINI_API_KEY
-    if not api_key and getattr(config, "GEMINI_API_KEYS", None):
-        api_key = config.GEMINI_API_KEYS[0]
-
-    system_prompt = (
-        "أنتِ 'فضفضة' (Fadfada) — رفيقة استماع داعمة ومريحة نفسياً تتحدثين دائماً بالعامية المصرية المعاصرة فقط.\n"
-        "- تحدثي دائماً وحصرياً بالعامية المصرية الأصيلة ولا تستخدمي أي لغة أو لهجة أخرى حتى لو تحدث المستخدم بلغة أخرى.\n"
-        "- الاستثناء الوحيد هو الكلمات والمصطلحات الإنجليزية الشائعة في الصحة النفسية التي يصعب ترجمتها (مثل Overthinking, Burnout, Panic attack, Trigger, Stress, Safe space, Trauma).\n"
-        "- سؤال واحد فقط في كل مرة، وجمل قصيرة ودافئة.\n"
-        "- لا تقدمي أي تشخيصات طبية ولا تصفي أي أدوية مطلقاً.\n"
-        "- في حالات الخطر أو الانتحار، استخدمي أداة escalate_crisis وانصحي فوراً بالاتصال بالخط الساخن 16328 أو الإسعاف 123.\n"
-        "- عند القلق المفرط أو تسارع الأنفاس، استخدمي أداة trigger_grounding_exercise لمشاركة تمرين التنفس المربع 4-4-4."
-    )
-    sys_prompt_file = config.BASE_DIR / "prompts" / "live_agent" / "system_prompt.md"
-    if sys_prompt_file.exists():
-        try:
-            with open(sys_prompt_file, "r", encoding="utf-8") as f:
-                content = f.read().strip()
-                if content:
-                    system_prompt = content
-        except Exception:
-            pass
-
-    patient_context = await memory_service.build_patient_session_context(patient_id)
-    if patient_context:
-        system_prompt += f"\n\n---\n{patient_context}\n"
-
-    from backend.services.psychiatric_tools import GEMINI_PSYCHIATRIC_TOOLS
-
-    return {
-        "status": "ok",
-        "has_api_key": bool(api_key),
-        "api_key": api_key,
-        "model": config.MODEL_LIVE,
-        "voice": config.DEFAULT_VOICE,
-        "ws_url": (
-            f"wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent?key={api_key}"
-            if api_key
-            else ""
-        ),
-        "system_instruction": system_prompt,
-        "tools": [
-            {
-                "functionDeclarations": GEMINI_PSYCHIATRIC_TOOLS
-            }
-        ],
-        "environment": "vercel" if os.getenv("VERCEL") else "local",
-    }
-
-
-@app.post("/session/{session_id}/record-turn")
-@app.post("/api/session/{session_id}/record-turn")
-async def record_session_turn(session_id: str, payload: RecordTurnRequest):
-    if payload.user_text:
-        await storage.add_message(session_id, "user", payload.user_text)
-    if payload.agent_text:
-        await storage.add_message(session_id, "assistant", payload.agent_text)
-    return {"status": "recorded", "session_id": session_id}
-
-
-@app.get("/protocols")
 @app.get("/api/protocols")
 async def list_protocols(category: Optional[str] = None):
     return {
@@ -219,7 +142,6 @@ async def list_protocols(category: Optional[str] = None):
     }
 
 
-@app.get("/crisis")
 @app.get("/api/crisis")
 async def list_crisis_directory():
     return {
@@ -228,7 +150,6 @@ async def list_crisis_directory():
     }
 
 
-@app.get("/patient/{patient_id}")
 @app.get("/api/patient/{patient_id}")
 async def get_patient_profile(patient_id: str):
     has_consent = await memory_service.check_consent(patient_id)

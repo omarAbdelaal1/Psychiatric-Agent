@@ -22,35 +22,22 @@ HOST = os.getenv("HOST", "0.0.0.0")
 PORT = int(os.getenv("PORT", "8005"))
 DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "1", "t")
 
-def _clean_env(val: str, default: str = "") -> str:
-    if not val:
-        return default
-    return val.strip().strip("\"'").strip()
-
 # API Keys (Loaded strictly from environment variables/.env)
-GEMINI_API_KEY = _clean_env(os.getenv("GEMINI_API_KEY", ""))
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 
 # Candidate API key pool for resilient failover
 _env_keys_raw = os.getenv("GEMINI_API_KEYS", "")
 if _env_keys_raw:
-    GEMINI_API_KEYS = [_clean_env(k) for k in _env_keys_raw.split(",") if _clean_env(k)]
+    GEMINI_API_KEYS = [k.strip() for k in _env_keys_raw.split(",") if k.strip()]
 elif GEMINI_API_KEY:
     GEMINI_API_KEYS = [GEMINI_API_KEY]
 else:
     GEMINI_API_KEYS = []
 
 # AI Models (Verified active with BidiGenerateContent on Google Gemini Live API)
-_raw_model_live = _clean_env(os.getenv("MODEL_LIVE", "gemini-3.8-live"), "gemini-3.8-live")
-if _raw_model_live.startswith("models/"):
-    _raw_model_live = _raw_model_live[len("models/"):]
-MODEL_LIVE = _raw_model_live
-
-_raw_model_flash = _clean_env(os.getenv("MODEL_FLASH", "gemini-3.8-flash"), "gemini-3.8-flash")
-if _raw_model_flash.startswith("models/"):
-    _raw_model_flash = _raw_model_flash[len("models/"):]
-MODEL_FLASH = _raw_model_flash
-
-DEFAULT_VOICE = _clean_env(os.getenv("DEFAULT_VOICE", "Aoede"), "Aoede")
+MODEL_LIVE = os.getenv("MODEL_LIVE", "gemini-3.8-live")
+MODEL_FLASH = os.getenv("MODEL_FLASH", "gemini-3.8-flash")
+DEFAULT_VOICE = os.getenv("DEFAULT_VOICE", "Aoede")
 
 # Gemini Live WebSocket Endpoint
 GEMINI_WS_URL = (
