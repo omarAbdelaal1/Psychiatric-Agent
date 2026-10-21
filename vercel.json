@@ -12,6 +12,10 @@
   ],
   "routes": [
     {
+      "src": "^/ws/live$",
+      "dest": "/api/index.py"
+    },
+    {
       "src": "/static/(.*)",
       "dest": "/frontend/$1"
     },
