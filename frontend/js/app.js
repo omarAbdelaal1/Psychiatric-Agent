@@ -1,16 +1,23 @@
 /**
  * FADFADA (فضفضة) — Master Web Audio & Full-Duplex Live Streaming Client
- * Ported from reference sales_voice_agent_demo architecture:
- * 1. Single locked Aoede voice configuration.
- * 2. Studio-grade AudioStreamer with immediate gain restoration & zero-crop startup.
- * 3. Global user gesture AudioContext unlocking (click, touchstart, keydown).
- * 4. Separated conversational message feed (live streaming active bubbles + 1.5s cadence sealing).
- * 5. Egyptian clinical protocol adherence & Law 151/2020 privacy compliance.
+ * Architecture:
+ * 1. Single locked female Aoede voice configuration.
+ * 2. Studio-grade AudioStreamer with native 24kHz upsampling, boundary micro-blending, & immediate gain un-ducking.
+ * 3. Dual-Mode Seamless Transport:
+ *    - Cloud / Serverless (Vercel): Direct Gemini Live WebSocket with zero user key input (auto-fetched from /api/live-config).
+ *    - Local Development: ASGI WebSocket Gateway (/ws/live) with automatic fallback to Direct Gemini Live.
+ * 4. Full-duplex interruption & barge-in handling.
+ * 5. Egyptian psychiatric clinical protocols, grounding tools, and Law 151/2020 privacy compliance.
  */
 
 class FadfadaClient {
   constructor() {
-    this.socket = null;
+    this.socket = null;            // Local gateway WebSocket (if running locally)
+    this.geminiSocket = null;      // Direct Gemini Live WebSocket (for cloud/serverless)
+    this.isDirectGemini = false;
+    this.isConnecting = false;
+    this.liveConfig = null;
+
     this.isRecording = false;
     this.isPlayingAgentAudio = false;
     this.patientId = 'default_user';
@@ -18,11 +25,15 @@ class FadfadaClient {
     this.audioGeneration = 0;
     this.isManualInterruptActive = false;
 
+    // Buffer for recording conversation turns to backend storage
+    this.currentTurnUserText = '';
+    this.currentTurnAgentText = '';
+
     // Visualizer energy metrics
     this.userRMS = 0;
     this.orbPhase = 0;
 
-    // Active streaming message elements (matching sales_voice_agent_demo architecture)
+    // Active streaming message elements
     this.activeUserMsgElem = null;
     this.activeAgentMsgElem = null;
     this.userUtteranceTimer = null;
@@ -38,13 +49,26 @@ class FadfadaClient {
 
     this.btnStartVoice = document.getElementById('btnStartVoice');
     this.btnRecordLabel = document.getElementById('btnRecordLabel');
-    this.btnFinishTurn = document.getElementById('btnFinishTurn');
-    this.btnInterrupt = document.getElementById('btnInterrupt');
 
     // Instantiate studio-grade AudioStreamer with native full-duplex streaming
     this.audioStreamer = new AudioStreamer({
       onAudioChunk: (base64Audio) => {
-        if (this.socket && this.socket.readyState === WebSocket.OPEN && this.isRecording) {
+        if (!this.isRecording) return;
+
+        if (this.isDirectGemini && this.geminiSocket && this.geminiSocket.readyState === WebSocket.OPEN) {
+          // Direct Gemini Live uplink format (16kHz PCM Mono)
+          this.geminiSocket.send(JSON.stringify({
+            realtimeInput: {
+              mediaChunks: [
+                {
+                  mimeType: 'audio/pcm;rate=16000',
+                  data: base64Audio
+                }
+              ]
+            }
+          }));
+        } else if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+          // Local gateway format
           this.socket.send(JSON.stringify({
             type: 'audio',
             data: base64Audio
@@ -56,50 +80,310 @@ class FadfadaClient {
       },
       onPlaybackStateChange: (isPlaying) => {
         this.isPlayingAgentAudio = isPlaying;
-        if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+        if (!this.isDirectGemini && this.socket && this.socket.readyState === WebSocket.OPEN) {
           this.socket.send(JSON.stringify({
             type: 'playback_state',
             is_playing: isPlaying
           }));
         }
         if (isPlaying) {
-          this.setStatus('فضفضة يتحدث..');
+          this.setStatus('فضفضة تتحدث..');
         } else {
-          this.setStatus(this.isRecording ? 'أنا سامعاك.. اتفضل اتكلم' : 'مستعد للحديث');
+          this.setStatus(this.isRecording ? 'أنا سامعاكِ.. اتفضلي اتكلمي' : 'مستعدة للحديث');
         }
       }
     });
 
     this.initVisualizer();
-    this.connectWebSocket();
+    this.initConnection();
     this.loadProtocols();
     this.loadCrisisDirectory();
     this.loadPatientConsent();
   }
 
   // =========================================================================
-  // WebSocket Connection & Event Demuxing
+  // Connection Orchestration (Local Gateway vs Cloud Direct Gemini Live)
   // =========================================================================
-  connectWebSocket() {
+  async initConnection() {
+    if (this.isConnecting) return;
+    this.isConnecting = true;
+
+    const hostname = window.location.hostname;
+    const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1' || hostname.startsWith('192.168.');
+    const isVercel = hostname.includes('vercel.app') || hostname.includes('now.sh');
+
     const urlParams = new URLSearchParams(window.location.search);
-    const customBackend = urlParams.get('backend') || window.FADFADA_BACKEND_URL || localStorage.getItem('fadfada_backend_url');
+    const forceDirect = urlParams.get('mode') === 'direct';
+    const forceGateway = urlParams.get('mode') === 'gateway';
 
-    let wsUrl;
-    if (customBackend) {
-      const cleanHost = customBackend.replace(/^https?:\/\//, '').replace(/^wss?:\/\//, '').replace(/\/ws\/live$/, '').replace(/\/$/, '');
-      const proto = (customBackend.startsWith('wss://') || customBackend.startsWith('https://') || window.location.protocol === 'https:') ? 'wss:' : 'ws:';
-      wsUrl = `${proto}//${cleanHost}/ws/live`;
+    // On Vercel / serverless cloud environments, incoming WebSockets are not supported.
+    // Seamlessly connect directly to Gemini Live using server-provided session configuration.
+    if (isVercel || forceDirect || !isLocalhost) {
+      console.log('[Fadfada] Cloud / Vercel environment detected. Using Direct Gemini Live streaming...');
+      await this.connectDirectGemini();
+    } else if (forceGateway || isLocalhost) {
+      console.log('[Fadfada] Local environment detected. Attempting local ASGI gateway...');
+      this.connectLocalGateway();
     } else {
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      wsUrl = `${protocol}//${window.location.host}/ws/live`;
+      await this.connectDirectGemini();
     }
-    console.log('[Fadfada] Connecting WebSocket:', wsUrl);
+  }
 
+  // -------------------------------------------------------------------------
+  // Direct Gemini Live WebSocket (Cloud / Vercel Serverless)
+  // -------------------------------------------------------------------------
+  async connectDirectGemini() {
+    try {
+      this.setStatus('جارٍ إعداد جلسة الفضفضة..');
+      console.log('[Fadfada] Fetching live config from serverless backend (/api/live-config)...');
+
+      const res = await fetch(`/api/live-config?patient_id=${encodeURIComponent(this.patientId)}`);
+      if (!res.ok) {
+        throw new Error(`Failed to load session config: HTTP ${res.status}`);
+      }
+
+      const config = await res.json();
+      this.liveConfig = config;
+
+      if (!config.has_api_key || !config.ws_url) {
+        console.error('[Fadfada] No GEMINI_API_KEY available from server environment.');
+        this.setStatus('⚠️ مفتاح GEMINI_API_KEY غير موجود في إعدادات البيئة (Vercel Variables)');
+        this.addMessage(
+          '⚠️ لم يتم العثور على مفتاح GEMINI_API_KEY في إعدادات الخادم (Environment Variables). يرجى إضافة المفتاح في لوحة تحكم Vercel وإعادة تشغيل النشر.',
+          'agent'
+        );
+        this.isConnecting = false;
+        return;
+      }
+
+      console.log('[Fadfada] Connecting directly to Gemini Live with model:', config.model);
+      this.geminiSocket = new WebSocket(config.ws_url);
+      this.isDirectGemini = true;
+
+      this.geminiSocket.onopen = () => {
+        console.log('[Fadfada] Direct Gemini Live WebSocket connected. Dispatching setup frame...');
+        const setupMessage = {
+          setup: {
+            model: `models/${config.model || 'gemini-3.8-live'}`,
+            generationConfig: {
+              responseModalities: ['AUDIO'],
+              speechConfig: {
+                voiceConfig: {
+                  prebuiltVoiceConfig: {
+                    voiceName: config.voice || 'Aoede'
+                  }
+                }
+              }
+            },
+            outputAudioTranscription: {},
+            systemInstruction: {
+              parts: [{ text: config.system_instruction }]
+            },
+            tools: config.tools || []
+          }
+        };
+        this.geminiSocket.send(JSON.stringify(setupMessage));
+      };
+
+      this.geminiSocket.onmessage = async (event) => {
+        try {
+          let dataText = event.data;
+          if (dataText instanceof Blob) {
+            dataText = await dataText.text();
+          }
+          const msg = JSON.parse(dataText);
+          this.handleDirectGeminiMessage(msg);
+        } catch (err) {
+          console.error('[Fadfada] Failed to parse Gemini Live packet:', err);
+        }
+      };
+
+      this.geminiSocket.onerror = (err) => {
+        console.error('[Fadfada] Direct Gemini Live WebSocket error:', err);
+      };
+
+      this.geminiSocket.onclose = (ev) => {
+        console.warn(`[Fadfada] Direct Gemini WebSocket closed (code ${ev.code}). Reconnecting in 3s...`);
+        this.isConnecting = false;
+        setTimeout(() => this.connectDirectGemini(), 3000);
+      };
+
+      this.isConnecting = false;
+    } catch (err) {
+      console.error('[Fadfada] Direct Gemini initialization error:', err);
+      this.setStatus('تعذر إعداد الاتصال.. جاري إعادة المحاولة');
+      this.isConnecting = false;
+      setTimeout(() => this.connectDirectGemini(), 3000);
+    }
+  }
+
+  handleDirectGeminiMessage(msg) {
+    // 1. Initial Setup Acknowledgement
+    if (msg.setupComplete) {
+      this.setStatus('مستعدة للحديث');
+      console.log('[Fadfada] Direct Gemini Live ready! Locked Female Voice: Aoede');
+      return;
+    }
+
+    // 2. Server Content: Audio downlink, transcriptions, and barge-in interrupts
+    const sc = msg.serverContent;
+    if (sc) {
+      // Barge-in / Interruption detected by Gemini's native server VAD
+      if (sc.interrupted) {
+        this.audioGeneration++;
+        console.log(`[Fadfada] Generation interrupted by user speech (generation_id: ${this.audioGeneration})`);
+        this.audioStreamer.stopPlayback();
+        this.hideInterimCard();
+        this.sealActiveAgentBubble();
+        this.sealActiveUserBubble();
+        this.setStatus('أنا سامعاكِ.. اتفضلي اتكلمي');
+      }
+
+      // Spoken User Transcription (Gemini internal STT)
+      const inTrans = sc.inputTranscription || msg.inputTranscription;
+      if (inTrans && inTrans.text) {
+        this.appendUserTranscription(inTrans.text);
+        this.currentTurnUserText = this.smartAppendArabicText(this.currentTurnUserText, inTrans.text);
+        this.checkClientCrisisSignals(inTrans.text);
+      }
+
+      // Spoken Agent Output Transcription
+      const outTrans = sc.outputTranscription || msg.outputTranscription;
+      if (outTrans && outTrans.text) {
+        this.appendAgentText(outTrans.text);
+        this.currentTurnAgentText = this.smartAppendArabicText(this.currentTurnAgentText, outTrans.text);
+      }
+
+      // 24kHz PCM Audio Downlink
+      if (!sc.interrupted && sc.modelTurn && sc.modelTurn.parts) {
+        for (const part of sc.modelTurn.parts) {
+          if (part.inlineData && part.inlineData.data) {
+            this.sealActiveUserBubble();
+            this.audioStreamer.playAudioChunk(part.inlineData.data);
+          }
+        }
+      }
+
+      // Turn Complete: Flush turn to persistent serverless database
+      if (sc.turnComplete || sc.generationComplete) {
+        this.recordTurnToBackend();
+        this.sealActiveUserBubble();
+        this.sealActiveAgentBubble();
+        this.hideInterimCard();
+        this.setStatus(this.isRecording ? 'أنا سامعاكِ.. اتفضلي اتكلمي' : 'مستعدة للحديث');
+      }
+    }
+
+    // 3. Clinical Tool Calls (Grounding, Crisis Escalation, Protocols)
+    const toolCall = msg.toolCall || (sc && sc.toolCall);
+    if (toolCall && toolCall.functionCalls) {
+      this.handleGeminiToolCalls(toolCall.functionCalls);
+    }
+  }
+
+  async handleGeminiToolCalls(functionCalls) {
+    const functionResponses = [];
+
+    for (const call of functionCalls) {
+      const callId = call.id;
+      const name = call.name;
+      const args = call.args || {};
+      console.log(`[Fadfada] Executing clinical tool: ${name}`, args);
+
+      let result = {};
+
+      if (name === 'trigger_grounding_exercise') {
+        const exercise = args.exercise_name || 'square_breathing';
+        const title = exercise === 'square_breathing' ? 'التنفس المربع (4-4-4)' : 'تمرين الحواس الخمس (5-4-3-2-1)';
+        const guidance = args.guidance_ar || (exercise === 'square_breathing'
+          ? 'خد نفس هادي في 4 ثواني.. واكتمه 4 ثواني.. وازفر براحة في 4 ثواني..'
+          : 'بص حواليك ولاحظ 5 حاجات شايفها، و4 حاجات حاسس بيها ملموسة..');
+
+        this.showGroundingExercise({
+          exercise: exercise,
+          title_ar: title,
+          guidance_ar: guidance
+        });
+
+        result = {
+          status: 'success',
+          exercise: exercise,
+          title_ar: title,
+          guidance_ar: guidance,
+          instruction: 'Explain the step calmly in one gentle sentence in Egyptian Arabic and invite the user to breathe or observe.'
+        };
+      } else if (name === 'escalate_crisis') {
+        const urgency = args.urgency_level || 'immediate';
+        this.showCrisisAlert({
+          primary_hotline: '16328',
+          ambulance: '123',
+          urgency: urgency
+        });
+
+        result = {
+          status: 'escalated',
+          urgency: urgency,
+          primary_hotline: {
+            name: 'الخط الساخن للأمانة العامة للصحة النفسية وعلاج الإدمان (MOHP)',
+            number: '16328',
+            availability: '24/7 مجاناً'
+          },
+          ambulance: '123',
+          instruction: 'Urge the patient warmly to contact 16328 or 123 immediately and assure them that their life and safety are the top priority.'
+        };
+      } else if (name === 'select_therapeutic_protocol') {
+        result = {
+          status: 'selected',
+          protocol: {
+            id: 'cbt_worry_postponement',
+            title_ar: 'تأجيل القلق وتفنيد الأفكار',
+            evidence_base: 'CBT / ACT'
+          }
+        };
+      } else {
+        result = { status: 'ok' };
+      }
+
+      functionResponses.push({
+        id: callId,
+        response: { output: result }
+      });
+    }
+
+    if (this.geminiSocket && this.geminiSocket.readyState === WebSocket.OPEN) {
+      this.geminiSocket.send(JSON.stringify({
+        toolResponse: { functionResponses }
+      }));
+      console.log('[Fadfada] Clinical tool responses dispatched back to Gemini Live');
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // Local ASGI Gateway WebSocket (Localhost Development)
+  // -------------------------------------------------------------------------
+  connectLocalGateway() {
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${protocol}//${window.location.host}/ws/live`;
+    console.log('[Fadfada] Connecting local WebSocket gateway:', wsUrl);
+
+    let connectionOpened = false;
     this.socket = new WebSocket(wsUrl);
 
+    // If local gateway fails to open within 3.5s, fall back to Direct Gemini Live
+    const fallbackTimer = setTimeout(() => {
+      if (!connectionOpened) {
+        console.warn('[Fadfada] Local gateway handshake timed out. Falling back to Direct Gemini Live...');
+        try { this.socket.close(); } catch (e) {}
+        this.connectDirectGemini();
+      }
+    }, 3500);
+
     this.socket.onopen = () => {
-      console.log('[Fadfada] WebSocket connected.');
-      // Voice strictly locked to Aoede
+      connectionOpened = true;
+      clearTimeout(fallbackTimer);
+      this.isDirectGemini = false;
+      this.isConnecting = false;
+      console.log('[Fadfada] Local gateway WebSocket connected.');
       this.socket.send(JSON.stringify({
         type: 'init',
         voice: 'Aoede',
@@ -113,21 +397,31 @@ class FadfadaClient {
         const msg = JSON.parse(event.data);
         this.handleServerMessage(msg);
       } catch (err) {
-        console.error('[Fadfada] Failed to parse message:', err);
+        console.error('[Fadfada] Failed to parse gateway message:', err);
       }
     };
 
-    this.socket.onerror = (err) => console.error('[Fadfada] WebSocket error:', err);
+    this.socket.onerror = (err) => {
+      console.warn('[Fadfada] Local gateway WebSocket error:', err);
+      if (!connectionOpened) {
+        clearTimeout(fallbackTimer);
+        console.log('[Fadfada] Switching to Direct Gemini Live due to gateway error...');
+        this.connectDirectGemini();
+      }
+    };
+
     this.socket.onclose = () => {
-      console.warn('[Fadfada] WebSocket closed. Reconnecting in 3s..');
-      setTimeout(() => this.connectWebSocket(), 3000);
+      if (connectionOpened) {
+        console.warn('[Fadfada] Local gateway WebSocket closed. Reconnecting in 3s..');
+        setTimeout(() => this.connectLocalGateway(), 3000);
+      }
     };
   }
 
   handleServerMessage(msg) {
     switch (msg.type) {
       case 'ready':
-        this.setStatus('مستعد للحديث');
+        this.setStatus('مستعدة للحديث');
         console.log('[Fadfada] Server ready. Locked Voice: Aoede, Model:', msg.model);
         break;
 
@@ -148,6 +442,7 @@ class FadfadaClient {
       case 'user_transcription':
       case 'user_text':
         this.appendUserTranscription(msg.text);
+        this.checkClientCrisisSignals(msg.text);
         break;
 
       case 'agent_text':
@@ -158,23 +453,12 @@ class FadfadaClient {
       case 'interrupted': {
         const incomingGen = Number(msg.generation_id ?? 0);
         this.audioGeneration = Math.max(this.audioGeneration + 1, incomingGen);
-        console.log(`[Fadfada] Interrupted signal received (reason: ${msg.reason}, generation: ${this.audioGeneration})`);
+        console.log(`[Fadfada] Interrupted signal received (generation: ${this.audioGeneration})`);
         this.audioStreamer.stopPlayback();
         this.hideInterimCard();
-
-        // Show a human-interruption badge only when user speech/manual input is confirmed
-        if (msg.reason === 'manual' || this.isManualInterruptActive) {
-          if (this.activeAgentMsgElem && !this.activeAgentMsgElem.querySelector('.interrupted-badge')) {
-            const badge = document.createElement('span');
-            badge.className = 'interrupted-badge';
-            badge.style = 'display:inline-block; font-size:0.75rem; color:#dc2626; background:#fee2e2; padding:1px 6px; border-radius:4px; margin-inline-start:6px;';
-            badge.textContent = '[تمت المقاطعة ⚡]';
-            this.activeAgentMsgElem.appendChild(badge);
-          }
-        }
         this.sealActiveAgentBubble();
         this.sealActiveUserBubble();
-        this.setStatus('تم إيقاف الرد');
+        this.setStatus('أنا سامعاكِ.. اتفضلي اتكلمي');
         break;
       }
 
@@ -186,7 +470,7 @@ class FadfadaClient {
         this.sealActiveUserBubble();
         this.sealActiveAgentBubble();
         this.hideInterimCard();
-        this.setStatus(this.isRecording ? 'أنا سامعاك.. اتفضل اتكلم' : 'مستعد للحديث');
+        this.setStatus(this.isRecording ? 'أنا سامعاكِ.. اتفضلي اتكلمي' : 'مستعدة للحديث');
         break;
       }
 
@@ -201,7 +485,40 @@ class FadfadaClient {
   }
 
   // =========================================================================
-  // Separated Dialogue Message Feed Management (Architecture from sales_voice_agent_demo)
+  // Client-Side Emergency Signal Detection
+  // =========================================================================
+  checkClientCrisisSignals(text) {
+    if (!text) return;
+    const crisisPatterns = /(انتحر|عايز\s*اموت|أموت|أنهي\s*حياتي|انهي\s*حياتي|مش\s*قادر\s*اعيش|مش\s*قادرة\s*اعيش|اذي\s*نفسي|أذي\s*نفسي|انتحار)/i;
+    if (crisisPatterns.test(text)) {
+      this.showCrisisAlert({
+        primary_hotline: '16328',
+        ambulance: '123',
+        urgency: 'immediate'
+      });
+    }
+  }
+
+  recordTurnToBackend() {
+    const userFinal = this.currentTurnUserText.trim();
+    const agentFinal = this.currentTurnAgentText.trim();
+    if (userFinal || agentFinal) {
+      fetch(`/api/session/${encodeURIComponent(this.sessionId)}/record-turn`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          patient_id: this.patientId,
+          user_text: userFinal,
+          agent_text: agentFinal
+        })
+      }).catch((err) => console.warn('[Fadfada] Failed to record turn to backend:', err));
+    }
+    this.currentTurnUserText = '';
+    this.currentTurnAgentText = '';
+  }
+
+  // =========================================================================
+  // Dialogue Message Feed Management
   // =========================================================================
   smartAppendArabicText(existing, chunk) {
     if (!chunk) return existing || '';
@@ -257,7 +574,6 @@ class FadfadaClient {
     const clean = this.sanitizeASR(chunk);
     if (!clean) return;
 
-    // Seal active agent bubble when user speaks
     this.sealActiveAgentBubble();
 
     if (this.conversationFeed) {
@@ -280,7 +596,6 @@ class FadfadaClient {
       this.showInterimCard('أنت تتحدث الآن...', this.activeUserMsgElem.textContent);
     }
 
-    // Automatically seal active user bubble after 1.5s of silence
     if (this.userUtteranceTimer) clearTimeout(this.userUtteranceTimer);
     this.userUtteranceTimer = setTimeout(() => {
       this.sealActiveUserBubble();
@@ -292,7 +607,6 @@ class FadfadaClient {
     const clean = this.sanitizeASR(chunk);
     if (!clean) return;
 
-    // Seal active user bubble
     this.sealActiveUserBubble();
 
     if (this.conversationFeed) {
@@ -312,7 +626,7 @@ class FadfadaClient {
 
       this.activeAgentMsgElem.textContent = this.smartAppendArabicText(this.activeAgentMsgElem.textContent, clean);
       this.scrollFeedToBottom();
-      this.showInterimCard('فضفضة يتحدث الآن...', this.activeAgentMsgElem.textContent);
+      this.showInterimCard('فضفضة تتحدث الآن...', this.activeAgentMsgElem.textContent);
     }
   }
 
@@ -394,7 +708,7 @@ class FadfadaClient {
       await this.audioStreamer.startRecording();
       this.isRecording = true;
       this.updateControlsUI();
-      this.setStatus('أنا سامعاك.. اتفضل اتكلم');
+      this.setStatus('أنا سامعاكِ.. اتفضلي اتكلمي');
       console.log('[Fadfada] Microphone capture started via AudioStreamer');
     } catch (err) {
       console.error('[Fadfada] Mic access failed:', err);
@@ -410,37 +724,27 @@ class FadfadaClient {
     this.sealActiveAgentBubble();
     this.hideInterimCard();
     this.updateControlsUI();
-    this.setStatus('مستعد للحديث');
+    this.setStatus('مستعدة للحديث');
     console.log('[Fadfada] Microphone capture stopped');
   }
 
-  triggerTurnComplete() {
-    if (this.socket && this.socket.readyState === WebSocket.OPEN) {
-      this.socket.send(JSON.stringify({ type: 'audio_turn_complete' }));
-      this.setStatus('فضفضة يفكر بالرد..');
-    }
-  }
-
   triggerBargeIn() {
-    console.log('[Fadfada] Manual interrupt button clicked.');
     this.isManualInterruptActive = true;
     this.audioStreamer.stopPlayback();
-    if (this.activeAgentMsgElem && this.activeAgentMsgElem.textContent.trim()) {
-      if (!this.activeAgentMsgElem.querySelector('.interrupted-badge')) {
-        const badge = document.createElement('span');
-        badge.className = 'interrupted-badge';
-        badge.style = 'display:inline-block; font-size:0.75rem; color:#dc2626; background:#fee2e2; padding:1px 6px; border-radius:4px; margin-inline-start:6px;';
-        badge.textContent = '[تمت المقاطعة ⚡]';
-        this.activeAgentMsgElem.appendChild(badge);
-      }
-    }
     this.sealActiveUserBubble();
     this.sealActiveAgentBubble();
     this.hideInterimCard();
-    this.setStatus('أنا سامعاك.. اتفضل اتكلم');
-    if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+    this.setStatus('أنا سامعاكِ.. اتفضلي اتكلمي');
+
+    if (this.isDirectGemini && this.geminiSocket && this.geminiSocket.readyState === WebSocket.OPEN) {
+      this.audioGeneration++;
+      this.geminiSocket.send(JSON.stringify({
+        clientContent: { turnComplete: true }
+      }));
+    } else if (this.socket && this.socket.readyState === WebSocket.OPEN) {
       this.socket.send(JSON.stringify({ type: 'user_interrupt' }));
     }
+
     setTimeout(() => {
       this.isManualInterruptActive = false;
     }, 1500);
@@ -451,16 +755,31 @@ class FadfadaClient {
     const text = input ? input.value.trim() : '';
     if (!text) return;
 
-    // Immediately display user message in conversation feed
     this.addMessage(text, 'user');
     if (input) input.value = '';
 
-    if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+    this.checkClientCrisisSignals(text);
+
+    if (this.isDirectGemini && this.geminiSocket && this.geminiSocket.readyState === WebSocket.OPEN) {
+      this.currentTurnUserText = text;
+      this.geminiSocket.send(JSON.stringify({
+        clientContent: {
+          turns: [
+            {
+              role: 'user',
+              parts: [{ text: text }]
+            }
+          ],
+          turnComplete: true
+        }
+      }));
+      this.setStatus('فضفضة تفكر بالرد..');
+    } else if (this.socket && this.socket.readyState === WebSocket.OPEN) {
       this.socket.send(JSON.stringify({
         type: 'text',
         text: text
       }));
-      this.setStatus('فضفضة يكتب رداً..');
+      this.setStatus('فضفضة تكتب رداً..');
     }
   }
 
@@ -509,7 +828,7 @@ class FadfadaClient {
       );
 
       if (this.isRecording && this.audioStreamer.isUserSpeaking) {
-        // User speaking: warm vibrant teal/emerald glow
+        // User speaking: warm vibrant emerald glow
         gradient.addColorStop(0, '#a7f3d0');
         gradient.addColorStop(0.4, '#10b981');
         gradient.addColorStop(0.8, '#047857');
@@ -552,13 +871,9 @@ class FadfadaClient {
       if (this.isRecording) {
         this.btnStartVoice.classList.add('recording');
         if (this.btnRecordLabel) this.btnRecordLabel.textContent = 'إيقاف الفضفضة';
-        if (this.btnFinishTurn) this.btnFinishTurn.disabled = false;
-        if (this.btnInterrupt) this.btnInterrupt.disabled = false;
       } else {
         this.btnStartVoice.classList.remove('recording');
         if (this.btnRecordLabel) this.btnRecordLabel.textContent = 'ابدأ الفضفضة';
-        if (this.btnFinishTurn) this.btnFinishTurn.disabled = true;
-        if (this.btnInterrupt) this.btnInterrupt.disabled = true;
       }
     }
   }
@@ -592,12 +907,12 @@ class FadfadaClient {
       const container = document.getElementById('protocolsList');
       if (!container) return;
 
-      container.innerHTML = data.protocols.map(p => `
+      container.innerHTML = data.protocols.map((p) => `
         <div class="protocol-item">
           <h4>${p.title_ar}</h4>
           <span class="protocol-category">${p.evidence_base}</span>
           <ol class="protocol-steps">
-            ${p.steps_ar.map(s => `<li>${s}</li>`).join('')}
+            ${p.steps_ar.map((s) => `<li>${s}</li>`).join('')}
           </ol>
         </div>
       `).join('');
@@ -613,7 +928,7 @@ class FadfadaClient {
       const container = document.getElementById('crisisList');
       if (!container) return;
 
-      container.innerHTML = data.crisis_directory.map(c => `
+      container.innerHTML = data.crisis_directory.map((c) => `
         <div class="crisis-contact-card">
           <strong>${c.organization}</strong>
           <a href="tel:${c.phone_number}" class="phone-link">📞 ${c.display_number}</a>
@@ -661,7 +976,7 @@ class FadfadaClient {
       return;
     }
 
-    list.innerHTML = memories.map(m => `
+    list.innerHTML = memories.map((m) => `
       <div class="memory-row">
         <div>
           <span class="memory-tag">${m.category}</span>
@@ -688,7 +1003,7 @@ let client = null;
 window.addEventListener('DOMContentLoaded', () => {
   client = new FadfadaClient();
 
-  // Ensure WebAudio Context is unlocked on any user gesture (matching sales_voice_agent_demo)
+  // Ensure WebAudio Context is unlocked on any user gesture
   const unlockAudio = () => {
     if (client && client.audioStreamer) {
       client.audioStreamer.initAudioContext();
@@ -700,7 +1015,6 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 function toggleVoiceSession() { client.toggleVoiceSession(); }
-function triggerTurnComplete() { client.triggerTurnComplete(); }
 function triggerBargeIn() { client.triggerBargeIn(); }
 function sendTypedTurn() { client.sendTypedTurn(); }
 function handleInputKey(e) { if (e.key === 'Enter') client.sendTypedTurn(); }

@@ -128,13 +128,17 @@ Open your browser to:
 1. Import the repository in [Vercel](https://vercel.com/):
    - **Repository**: `omarAbdelaal1/Psychiatric-Agent`
    - **Framework Preset**: Other (detected automatically via `vercel.json`)
-2. Set Environment Variables in Vercel Project Settings:
-   - `GEMINI_API_KEY`: Your Gemini API key.
-   - `MODEL_LIVE`: `gemini-3.8-live`
-   - `MODEL_FLASH`: `gemini-3.8-flash`
-3. Deploy!
+2. Set Environment Variables in Vercel Project Settings (**Settings** -> **Environment Variables**):
+   - `GEMINI_API_KEY`: Your Google Gemini API key.
+   - `MODEL_LIVE`: `gemini-3.8-live` (Optional, defaults to `gemini-3.8-live`)
+   - `MODEL_FLASH`: `gemini-3.8-flash` (Optional, defaults to `gemini-3.8-flash`)
+   - `DEFAULT_VOICE`: `Aoede` (Optional, defaults to `Aoede`)
+3. Click **Deploy**!
 
-For complete details on connecting the Vercel frontend to persistent WebSocket audio streaming gateways, see [`VERCEL_DEPLOYMENT.md`](file:///c:/sharing1/ML4/psychiatric_agent/VERCEL_DEPLOYMENT.md).
+### 💡 How Vercel Streaming Works (Zero User Key Entry):
+- **Server-Side Key Security**: The backend serverless endpoint (`GET /api/live-config`) reads `GEMINI_API_KEY` securely from Vercel's encrypted environment variables. End-users/visitors never see, enter, or upload any API key.
+- **Direct Full-Duplex Audio**: Because serverless cloud platforms (like Vercel Lambda) do not support long-running incoming WebSockets, the browser client seamlessly connects directly to Google's official Gemini Live WebSocket API using the server-authenticated session config.
+- **Seamless Local & Cloud Parity**: The application automatically detects its environment — running via local ASGI gateway (`ws://localhost:8005/ws/live`) on your computer, and via direct low-latency Gemini Live streaming on Vercel.
 
 ---
 
