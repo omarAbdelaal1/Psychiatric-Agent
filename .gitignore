@@ -28,6 +28,9 @@ htmlcov/
 # Vercel
 .vercel/
 
+# Local non-essential archive
+others/
+
 # Operating System
 .DS_Store
 Thumbs.db
